@@ -2,7 +2,7 @@ CCFLAGS = -Wall
 CC = g++
 
 p : main.o
-	$(CC) main.o -o p  -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network -lGL
+	$(CC) main.o -o main  -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network -lGL
 
 main.o : main.cpp
 	$(CC) $(CCFLAGS) -c main.cpp
