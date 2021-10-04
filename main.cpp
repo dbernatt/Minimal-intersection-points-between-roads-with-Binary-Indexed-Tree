@@ -237,22 +237,22 @@ void graphical_representation(edges *&edge, int numberOfEdges, int n, int m)
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 		{
-			view.move(-2, 0);
+			view.move(-1, 0);
 			window.setView(view);
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 		{
-			view.move(2, 0);
+			view.move(1, 0);
 			window.setView(view);
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 		{
-			view.move(0, -2);
+			view.move(0, -1);
 			window.setView(view);
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 		{
-			view.move(0, 2);
+			view.move(0, 1);
 			window.setView(view);
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
