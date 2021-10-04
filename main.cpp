@@ -11,10 +11,10 @@
 using namespace std;
 using namespace sf;
 
-double meret = 5;
-double tavolsag = 20;
+const double citySize = 5;
+const double dist = 20;
 
-struct elek
+struct edges
 {
 	int x;
 	int y;
@@ -26,200 +26,200 @@ struct draw_city
 	double y;
 };
 
-void beolvas(const char *filenames, elek *&el, int &n, int &m, int &elsz)
+void read(const char *filenames, edges *&edge, int &n, int &m, int &numberOfEdges)
 {
 
-	cout << "Beolvas " << filenames << " allomanybol...\n";
+	cout << "Read from" << filenames << " ...\n";
 
 	fstream file(filenames);
 
-	file >> n >> m >> elsz;
-	el = new elek[elsz];
+	file >> n >> m >> numberOfEdges;
+	edge = new edges[numberOfEdges];
 
-	for (int i = 0; i < elsz; i++)
+	for (int i = 0; i < numberOfEdges; i++)
 	{
-		file >> el[i].x >> el[i].y;
+		file >> edge[i].x >> edge[i].y;
 	}
 	file.close();
-	cout << "Beolvas " << filenames << " allomanybol vege.\n";
+	cout << "Read from" << filenames << " finshed.\n";
 }
 
-void kiir_bemenet(elek *el, int n, int m, int elsz)
+void print_input(edges *edge, int n, int m, int numberOfEdges)
 {
 
-	cout << "Nyugaton levo varosok szama : " << n << endl;
-	cout << "Keleten levo varosok szama : " << m << endl;
-	cout << "Autopalyak szama : " << elsz << endl;
-	for (int i = 0; i < elsz; ++i)
+	cout << "Number of cities on West: " << n << endl;
+	cout << "Number of cities on East: " << m << endl;
+	cout << "Number of highways: " << numberOfEdges << endl;
+	for (int i = 0; i < numberOfEdges; ++i)
 	{
-		cout << el[i].x << " -> " << el[i].y << endl;
+		cout << edge[i].x << " -> " << edge[i].y << endl;
 	}
 	cout << "-------------------------" << endl
 		 << endl;
 }
 
-void kiir_allomany(char *fnev)
+void print_file(char *filename)
 {
 
 	int n;
 	int m;
-	int elsz;
-	fstream fki(fnev);
-	fki >> n >> m >> elsz;
-	cout << n << " " << m << " " << elsz << endl;
+	int numberOfEdges;
+	fstream outputFile(filename);
+	outputFile >> n >> m >> numberOfEdges;
+	cout << n << " " << m << " " << numberOfEdges << endl;
 	int x, y;
-	while (fki >> x && fki >> y)
+	while (outputFile >> x && outputFile >> y)
 	{
 		cout << x << " " << y << endl;
 	}
 	cout << endl;
-	fki.close();
+	outputFile.close();
 }
 
-void init(elek *el, int *&v, int elsz)
+void init(edges *edge, int *&v, int numberOfEdges)
 {
-	for (int i = 0; i < elsz; ++i)
+	for (int i = 0; i < numberOfEdges; ++i)
 	{
-		v[i] = el[i].y;
+		v[i] = edge[i].y;
 	}
 }
 
-void rendez_jobb_ha_bal_egyenlo(elek *&el, int elsz)
+void sort_right_if_left_equal(edges *&edge, int numberOfEdges)
 {
 
-	for (int i = 0; i < elsz - 1; ++i)
+	for (int i = 0; i < numberOfEdges - 1; ++i)
 	{
-		for (int j = i + 1; j < elsz; ++j)
+		for (int j = i + 1; j < numberOfEdges; ++j)
 		{
-			if (el[i].x == el[j].x)
+			if (edge[i].x == edge[j].x)
 			{
-				if (el[i].y > el[j].y)
+				if (edge[i].y > edge[j].y)
 				{
-					swap(el[i], el[j]);
+					swap(edge[i], edge[j]);
 				}
 			}
 		}
 	}
 }
 
-void quicksort(elek *&el, int l, int elsz)
+void quicksort(edges *&edge, int l, int numberOfEdges)
 {
-	if (l >= elsz)
+	if (l >= numberOfEdges)
 		return;
 
-	int pivot = el[elsz].x;
+	int pivot = edge[numberOfEdges].x;
 	int cnt = l;
 
-	for (int i = l; i <= elsz; i++)
+	for (int i = l; i <= numberOfEdges; i++)
 	{
-		if (el[i].x < pivot)
+		if (edge[i].x < pivot)
 		{
-			swap(el[cnt], el[i]);
+			swap(edge[cnt], edge[i]);
 			cnt++;
 		}
 	}
-	quicksort(el, l, cnt - 2);
-	quicksort(el, cnt, elsz);
+	quicksort(edge, l, cnt - 2);
+	quicksort(edge, cnt, numberOfEdges);
 }
 
-void rendez(elek *&el, int elsz)
+void sort(edges *&edge, int numberOfEdges)
 {
-	// quicksort(el, 0, elsz-1);
+	// quicksort(edge, 0, numberOfEdges-1);
 
-	cout << "Rendez elek...\n";
-	for (int i = 0; i < elsz - 1; ++i)
+	cout << "Sort edges...\n";
+	for (int i = 0; i < numberOfEdges - 1; ++i)
 	{
-		for (int j = i + 1; j < elsz; ++j)
+		for (int j = i + 1; j < numberOfEdges; ++j)
 		{
-			if (el[i].x > el[j].y)
+			if (edge[i].x > edge[j].y)
 			{
-				swap(el[i], el[j]);
+				swap(edge[i], edge[j]);
 			}
 		}
 	}
-	rendez_jobb_ha_bal_egyenlo(el, elsz);
-	cout << "Rendez vege.\n";
+	sort_right_if_left_equal(edge, numberOfEdges);
+	cout << "Sorted successfully.\n";
 }
 
-long int metszespontok(elek *el, int elsz)
+long int crossings(edges *edge, int numberOfEdges)
 {
 	long int c = 0;
-	int jobb;
+	int right;
 
-	for (int i = 0; i < elsz - 1; ++i)
+	for (int i = 0; i < numberOfEdges - 1; ++i)
 	{
-		jobb = el[i].y;
-		for (int j = i + 1; j < elsz; ++j)
+		right = edge[i].y;
+		for (int j = i + 1; j < numberOfEdges; ++j)
 		{
-			if (el[j].y < jobb)
+			if (edge[j].y < right)
 				c++;
 		}
 	}
 	return c;
 }
 
-long int metszespontokBIT(elek *&el, int *v, BITree<int> &b, int elsz)
+long int crossingsBIT(edges *&edge, int *v, BITree<int> &b, int numberOfEdges)
 {
 
-	long int inverziokSzama = 0;
-	for (int i = elsz - 1; i >= 0; i--)
+	long int numberOfInversions = 0;
+	for (int i = numberOfEdges - 1; i >= 0; i--)
 	{
-		inverziokSzama += b.getSumBIT(v[i] - 1);
+		numberOfInversions += b.getSumBIT(v[i] - 1);
 		b.updateBIT(v[i], 1);
 	}
-	return inverziokSzama;
+	return numberOfInversions;
 }
 
-void make_coord(draw_city *&nyugatiVarosCoord, int n, draw_city *&keletiVarosCoord, int m)
+void make_coord(draw_city *&westernCities, int n, draw_city *&easternCities, int m)
 {
-	double k = meret + 10.0;
+	double k = citySize + 10.0;
 
 	for (int i = 0; i < n; i++)
 	{
-		nyugatiVarosCoord[i].x = 100;
-		nyugatiVarosCoord[i].y = k;
-		k += tavolsag;
+		westernCities[i].x = 100;
+		westernCities[i].y = k;
+		k += dist;
 	}
 
-	k = meret + 10;
+	k = citySize + 10;
 
 	for (int i = 0; i < m; ++i)
 	{
-		keletiVarosCoord[i].x = 900;
-		keletiVarosCoord[i].y = k;
-		k += tavolsag;
+		easternCities[i].x = 900;
+		easternCities[i].y = k;
+		k += dist;
 	}
 }
 
-void abrazol(elek *&el, int elsz, int n, int m)
+void graphical_representation(edges *&edge, int numberOfEdges, int n, int m)
 {
 
-	RenderWindow window(VideoMode(1024, 1024), "Varosok es Metszespontok");
+	RenderWindow window(VideoMode(1024, 1024), "Minimal highway intersections between cities");
 
-	CircleShape *nyugatiVaros = new CircleShape[n];
-	CircleShape *keletiVaros = new CircleShape[m];
+	CircleShape *westernCity = new CircleShape[n];
+	CircleShape *easternCity = new CircleShape[m];
 
-	draw_city *nyugatiVarosCoord = new draw_city[n];
-	draw_city *keletiVarosCoord = new draw_city[m];
+	draw_city *westernCities = new draw_city[n];
+	draw_city *easternCities = new draw_city[m];
 
-	make_coord(nyugatiVarosCoord, n, keletiVarosCoord, m);
+	make_coord(westernCities, n, easternCities, m);
 
-	double k = meret + 10.0;
+	double k = citySize + 10.0;
 
 	for (int j = 0; j < n; j++)
 	{
-		nyugatiVaros[j].setRadius(meret);
-		nyugatiVaros[j].setFillColor(Color(rand() % 255, rand() % 255, rand() % 255));
-		nyugatiVaros[j].setPosition(nyugatiVarosCoord[j].x, nyugatiVarosCoord[j].y);
-		k += tavolsag;
+		westernCity[j].setRadius(citySize);
+		westernCity[j].setFillColor(Color(rand() % 255, rand() % 255, rand() % 255));
+		westernCity[j].setPosition(westernCities[j].x, westernCities[j].y);
+		k += dist;
 	}
 
-	k = meret + 10.0;
+	k = citySize + 10.0;
 	for (int j = 0; j < m; j++)
 	{
-		keletiVaros[j].setRadius(meret);
-		keletiVaros[j].setFillColor(Color(rand() % 255, rand() % 255, rand() % 255));
-		keletiVaros[j].setPosition(keletiVarosCoord[j].x, keletiVarosCoord[j].y);
+		easternCity[j].setRadius(citySize);
+		easternCity[j].setFillColor(Color(rand() % 255, rand() % 255, rand() % 255));
+		easternCity[j].setPosition(easternCities[j].x, easternCities[j].y);
 	}
 
 	while (window.isOpen())
@@ -274,21 +274,21 @@ void abrazol(elek *&el, int elsz, int n, int m)
 
 		for (int j = 0; j < n; j++)
 		{
-			window.draw(nyugatiVaros[j]);
+			window.draw(westernCity[j]);
 		}
 
 		for (int j = 0; j < m; j++)
 		{
-			window.draw(keletiVaros[j]);
+			window.draw(easternCity[j]);
 		}
 
-		for (int i = 0; i < elsz; i++)
+		for (int i = 0; i < numberOfEdges; i++)
 		{
 			Vertex line[] = {
-				Vertex(Vector2f(nyugatiVarosCoord[el[i].x - 1].x + meret, nyugatiVarosCoord[el[i].x - 1].y + meret),
-					   nyugatiVaros[el[i].x - 1].getFillColor()),
-				Vertex(Vector2f(keletiVarosCoord[el[i].y - 1].x + meret, keletiVarosCoord[el[i].y - 1].y + meret),
-					   keletiVaros[el[i].y - 1].getFillColor())};
+				Vertex(Vector2f(westernCities[edge[i].x - 1].x + citySize, westernCities[edge[i].x - 1].y + citySize),
+					   westernCity[edge[i].x - 1].getFillColor()),
+				Vertex(Vector2f(easternCities[edge[i].y - 1].x + citySize, easternCities[edge[i].y - 1].y + citySize),
+					   easternCity[edge[i].y - 1].getFillColor())};
 			window.draw(line, 2, sf::Lines);
 		}
 
@@ -296,66 +296,66 @@ void abrazol(elek *&el, int elsz, int n, int m)
 	}
 
 	// for (int i = 0; i < n; ++i){
-	// 	delete nyugatiVarosCoord[i];
+	// 	delete westernCities[i];
 	// 	delete nyugaztiVaros[i];
 	// }
 
 	// for (int i = 0; i < m; ++i)
 	// {
-	// 	delete keletiVarosCoord[i];
-	// 	delete keletiVaros[i];
+	// 	delete easternCities[i];
+	// 	delete easternCity[i];
 	// }
 
-	delete[] nyugatiVaros;
-	delete[] keletiVaros;
-	delete[] keletiVarosCoord;
-	delete[] nyugatiVarosCoord;
+	delete[] westernCity;
+	delete[] easternCity;
+	delete[] easternCities;
+	delete[] westernCities;
 
 	return;
 }
 
 void urit(const char *filenames)
 {
-	cout << filenames << " allomany uritese...\n";
+	cout << filenames << " to empty...\n";
 	ofstream myfile;
 	myfile.open(filenames, ofstream::out | ofstream::trunc);
-	cout << filenames << " allomany uritese vege.\n";
+	cout << filenames << " is empty.\n";
 	myfile.close();
 }
 
-void general_bemenet(const char *filenames, int n, int m, int elsz)
+void generate_input(const char *filenames, int n, int m, int numberOfEdges)
 {
 	srand(time(NULL));
 	bool ok = false;
-	cout << "Varosok szama Nyugaton : ";
+	cout << "Number of cities on West : ";
 	cin >> n;
 	while (n < 1)
 	{
-		cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+		cout << "Invalid input number!\n";
 		cin >> n;
 	};
 
-	cout << "Varosok szama Keleten : ";
+	cout << "NUmber of cities on East : ";
 	cin >> m;
 	while (m <= 0)
 	{
-		cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+		cout << "Invalid input number!\n";
 		cin >> m;
 	}
-	cout << "Autopalyak szama : ";
-	cin >> elsz;
+	cout << "Number of highways : ";
+	cin >> numberOfEdges;
 
-	while (elsz < 0 && !ok)
+	while (numberOfEdges < 0 && !ok)
 	{
-		if (elsz < 0)
+		if (numberOfEdges < 0)
 		{
-			cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+			cout << "Invalid input number!\n";
 		}
 		else
 		{
-			if (elsz > (n * m))
+			if (numberOfEdges > (n * m))
 			{
-				cout << "Maximum autopalyak szama : " << (n * m) << endl;
+				cout << "Maximum number of highways : " << (n * m) << endl;
 				ok = false;
 			}
 			else
@@ -363,13 +363,13 @@ void general_bemenet(const char *filenames, int n, int m, int elsz)
 				ok = true;
 			}
 		}
-		cin >> elsz;
+		cin >> numberOfEdges;
 	}
 
 	fstream fgen(filenames);
 	fgen << n << " ";
 	fgen << m << " ";
-	fgen << elsz << "\n";
+	fgen << numberOfEdges << "\n";
 	int x;
 	int y;
 
@@ -388,7 +388,7 @@ void general_bemenet(const char *filenames, int n, int m, int elsz)
 	}
 
 	int i = 0;
-	for (; i < elsz; i++)
+	for (; i < numberOfEdges; i++)
 	{
 		x = rand() % M.size();
 		y = (1 + (rand() % (M[x].size() - 1)));
@@ -404,38 +404,38 @@ void general_bemenet(const char *filenames, int n, int m, int elsz)
 	fgen.close();
 }
 
-void be_felhasznalo(const char *filenames, int n, int m, int elsz)
+void input_from_user(const char *filenames, int n, int m, int numberOfEdges)
 {
 	bool ok = false;
-	cout << "Varosok szama Nyugaton : ";
+	cout << "Number of cities on West : ";
 	cin >> n;
 	while (n < 1)
 	{
-		cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+		cout << "Invalid input number!\n";
 		cin >> n;
 	};
 
-	cout << "Varosok szama Keleten : ";
+	cout << "Number of cities on East : ";
 	cin >> m;
 	while (m <= 0)
 	{
-		cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+		cout << "Invalid input number!\n";
 		cin >> m;
 	}
-	cout << "Autopalyak szama : ";
-	cin >> elsz;
+	cout << "Number of highways : ";
+	cin >> numberOfEdges;
 
-	while (elsz < 0 && !ok)
+	while (numberOfEdges < 0 && !ok)
 	{
-		if (elsz < 0)
+		if (numberOfEdges < 0)
 		{
-			cout << "Nullatol nagyobb pozitiv egesz szamot kerek!\n";
+			cout << "Invalid input number!\n";
 		}
 		else
 		{
-			if (elsz > (n * m))
+			if (numberOfEdges > (n * m))
 			{
-				cout << "Maximum autopalyak szama : " << (n * m) << endl;
+				cout << "Maximum number of highways : " << (n * m) << endl;
 				ok = false;
 			}
 			else
@@ -443,23 +443,23 @@ void be_felhasznalo(const char *filenames, int n, int m, int elsz)
 				ok = true;
 			}
 		}
-		cin >> elsz;
+		cin >> numberOfEdges;
 	}
 
 	fstream fgen(filenames);
 	fgen << n << " ";
 	fgen << m << " ";
-	fgen << elsz << "\n";
+	fgen << numberOfEdges << "\n";
 	int x;
 	int y;
 
-	for (int i = 0; i < elsz; i++)
+	for (int i = 0; i < numberOfEdges; i++)
 	{
-		cout << i << ". autopalya : \n";
+		cout << i << ". highway : \n";
 		ok = false;
 		do
 		{
-			cout << "indul : ";
+			cout << "start : ";
 			cin >> x;
 			if (x >= 1 && x <= n)
 			{
@@ -468,15 +468,15 @@ void be_felhasznalo(const char *filenames, int n, int m, int elsz)
 			}
 			else
 			{
-				cout << "Nem ervenyes kiindulopont! Ujra!\n";
+				cout << "Invalid strating city! Try again!\n";
 			}
 		} while (!ok);
 
-		cout << i << ". autopalya :\n";
+		cout << i << ". highway :\n";
 		ok = false;
 		do
 		{
-			cout << "vegpont : ";
+			cout << "end : ";
 			cin >> y;
 			if (y >= 1 && y <= m)
 			{
@@ -485,38 +485,38 @@ void be_felhasznalo(const char *filenames, int n, int m, int elsz)
 			}
 			else
 			{
-				cout << "Nem ervenyes vegpont! Ujra!\n";
+				cout << "Invalid ending city! Try again!\n";
 			}
 		} while (!ok);
 	}
 	fgen.close();
 }
 
-void beker_fnev(const char filenames[10][256], int betest, char *&fnev)
+void read_file(const char filenames[10][256], int numberOfFiles, char *&filename)
 {
-	bool jo;
+	bool good = false;
 	do
 	{
-		jo = false;
-		cout << " - [  ] Add meg az allomany nevet : ";
-		cin >> fnev;
-		for (int i = 0; i < betest && !jo; ++i)
+		good = false;
+		cout << " - [  ] Enter the filename : ";
+		cin >> filename;
+		for (int i = 0; i < numberOfFiles && !good; ++i)
 		{
-			if (strcmp(filenames[i], fnev) == 0)
+			if (strcmp(filenames[i], filename) == 0)
 			{
-				jo = true;
+				good = true;
 			}
 		}
-		if (!jo)
+		if (!good)
 		{
-			cout << " - [  ] Nem letezo allomany!\n";
+			cout << " - [  ] This file does not exists!\n";
 		}
-	} while (!jo);
+	} while (!good);
 }
 
-void kiir_filenames(const char filenames[10][256], int betest)
+void print_filenames(const char filenames[10][256], int numberOfFiles)
 {
-	for (int i = 0; i < betest; ++i)
+	for (int i = 0; i < numberOfFiles; ++i)
 		cout << " - [ " << i + 1 << " ] " << filenames[i] << "\n";
 }
 
@@ -525,73 +525,73 @@ int main(int argc, char **argv)
 
 	int n;
 	int m;
-	int elsz;
-	elek *el;
-	char feladat;
+	int numberOfEdges;
+	edges *edge;
+	char command;
 	bool ok = true;
 	clock_t c;
-	float ido;
-	long int hanydb;
-	char *fnev;
-	int betest = 5;
+	float runTime;
+	long int numberofCrossings;
+	char *filename;
+	int numberOfFiles = 5;
 	bool ok2 = true;
 
 	const char filenames[10][256] = {"test1.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt"};
 
-	n = m = elsz = 0;
-	beolvas(filenames[0], el, n, m, elsz);
-	rendez(el, elsz);
+	n = m = numberOfEdges = 0;
+	read(filenames[0], edge, n, m, numberOfEdges);
+	sort(edge, numberOfEdges);
 	while (ok)
 	{
 
 		cout << " - [ MENU ] -\n\n";
-		cout << " - [ 1 ] Autopalyak metszespontjainak szama negyzetes algoritmussal!\n";
-		cout << " - [ 2 ] Autopalyak metszespontjainak szama Binarisan Indexelt Faval!\n";
-		cout << " - [ 3 ] Bemeneti Allomanyok Kezelese!\n";
-		cout << " - [ 4 ] Kiir bemeneti allomany!\n";
-		cout << " - [ 5 ] Grafikus abrazolas!\n";
-		cout << " - [ 6 ] Kilepes!\n\n";
+		cout << " - [ 1 ] Number of crossing points of highways with square algorithm!\n";
+		cout << " - [ 2 ] Number of crossing points of highways with Binary Indexed Trees!\n";
+		cout << " - [ 3 ] Manage input files!\n";
+		cout << " - [ 4 ] Print input file!\n";
+		cout << " - [ 5 ] Graphic representation!\n";
+		cout << " - [ 6 ] Exit!\n\n";
 		cout << " -   ";
-		cin >> feladat;
+		cin >> command;
 		system("clear");
 
-		switch (feladat)
+		switch (command)
 		{
 		case '1':
 		{
-			cout << "Szamol...\n";
+			cout << "Calculating...\n";
 			c = clock();
-			hanydb = metszespontok(el, elsz);
-			cout << "Szamol vege.\n";
-			ido = ((float)(clock() - c)) / CLOCKS_PER_SEC;
-			printf("Futasi ido : %f sec. \n", ido);
-			cout << "Metszespontok szama O(n^2) : " << hanydb << endl;
+			numberofCrossings = crossings(edge, numberOfEdges);
+			cout << "Done.\n";
+			runTime = ((float)(clock() - c)) / CLOCKS_PER_SEC;
+			printf("Run time : %f sec. \n", runTime);
+			cout << "Number of crossings O(n^2) : " << numberofCrossings << endl;
 			cout << "---------------------\n\n";
 
-			cout << "\n - [ 1 ] Vissza!\n";
+			cout << "\n - [ 1 ] Back!\n";
 			cout << " -  ";
-			cin >> feladat;
+			cin >> command;
 		}
 		break;
 
 		case '2':
 		{
 			int *v;
-			v = new int[elsz]();
-			init(el, v, elsz);
+			v = new int[numberOfEdges]();
+			init(edge, v, numberOfEdges);
 			BITree<int> b(m);
 			c = clock();
-			cout << "Szamol...\n";
-			hanydb = metszespontokBIT(el, v, b, elsz);
-			cout << "Szamol vege.\n";
-			ido = ((float)(clock() - c)) / CLOCKS_PER_SEC;
-			printf("Futasi ido : %f sec.\n", ido);
-			cout << "Metszespontok szama O(elsz * log(m)): " << hanydb << endl;
+			cout << "Calculating...\n";
+			numberofCrossings = crossingsBIT(edge, v, b, numberOfEdges);
+			cout << "Done.\n";
+			runTime = ((float)(clock() - c)) / CLOCKS_PER_SEC;
+			printf("Run time : %f sec.\n", runTime);
+			cout << "Run time O(numberOfEdges * log(m)): " << numberofCrossings << endl;
 			cout << "---------------------\n\n";
 			delete[] v;
 			cout << "\n - [ 1 ] Vissza!\n";
 			cout << " -  ";
-			cin >> feladat;
+			cin >> command;
 		}
 		break;
 
@@ -602,96 +602,96 @@ int main(int argc, char **argv)
 			while (ok2)
 			{
 				system("clear");
-				cout << " - [ Bemeneti Allomanyok Kezelese ] -\n\n";
-				cout << " - [ 1 ] Allomany kivalasztasa!\n";
-				cout << " - [ 2 ] Bemenet felhasznalotol!\n";
-				cout << " - [ 3 ] General egy meglevo allomanyba!\n";
-				cout << " - [ 4 ] General minden meglevo allomanyba!\n";
-				cout << " - [ 5 ] Urit minden allomanyt!\n";
-				cout << " - [ 6 ] Urit egy allomanyt!\n";
-				cout << " - [ 7 ] Kiir egy allomanyt!\n";
-				cout << " - [ 8 ] Vissza Menuhoz!\n\n";
+				cout << " - [ Manage input files ] -\n\n";
+				cout << " - [ 1 ] Select file!\n";
+				cout << " - [ 2 ] Input from user!\n";
+				cout << " - [ 3 ] Generate input to a specific file!\n";
+				cout << " - [ 4 ] Generate input to every file!\n";
+				cout << " - [ 5 ] Empty every input file!\n";
+				cout << " - [ 6 ] Empty a specific input file!\n";
+				cout << " - [ 7 ] Print an input file content!\n";
+				cout << " - [ 8 ] Back!\n\n";
 
 				cout << " -  ";
-				cin >> feladat;
+				cin >> command;
 
-				switch (feladat)
+				switch (command)
 				{
 				case '1':
 				{
-					kiir_filenames(filenames, betest);
-					fnev = new char[256];
-					beker_fnev(filenames, betest, fnev);
-					n = m = elsz = 0;
-					delete[] el;
-					beolvas(fnev, el, n, m, elsz);
-					rendez(el, elsz);
-					delete[] fnev;
+					print_filenames(filenames, numberOfFiles);
+					filename = new char[256];
+					read_file(filenames, numberOfFiles, filename);
+					n = m = numberOfEdges = 0;
+					delete[] edge;
+					read(filename, edge, n, m, numberOfEdges);
+					sort(edge, numberOfEdges);
+					delete[] filename;
 				}
 				break;
 
 				case '2':
 				{
-					cout << " - [ Bemenet Felhasznalotol ] !\n\n";
-					kiir_filenames(filenames, betest);
-					fnev = new char[256];
-					beker_fnev(filenames, betest, fnev);
-					urit(fnev);
-					be_felhasznalo(fnev, n, m, elsz);
-					delete[] fnev;
-					rendez(el, elsz);
+					cout << " - [ Input from user ] !\n\n";
+					print_filenames(filenames, numberOfFiles);
+					filename = new char[256];
+					read_file(filenames, numberOfFiles, filename);
+					urit(filename);
+					input_from_user(filename, n, m, numberOfEdges);
+					delete[] filename;
+					sort(edge, numberOfEdges);
 				}
 				break;
 
 				case '3':
 				{
-					cout << " - [ General Meglevo Allomanyba ] !\n\n";
-					kiir_filenames(filenames, betest);
-					fnev = new char[256];
-					beker_fnev(filenames, betest, fnev);
-					urit(fnev);
-					general_bemenet(fnev, n, m, elsz);
-					rendez(el, elsz);
-					delete[] fnev;
+					cout << " - [ Generate input to a specific file ] !\n\n";
+					print_filenames(filenames, numberOfFiles);
+					filename = new char[256];
+					read_file(filenames, numberOfFiles, filename);
+					urit(filename);
+					generate_input(filename, n, m, numberOfEdges);
+					sort(edge, numberOfEdges);
+					delete[] filename;
 				}
 				break;
 
 				case '4':
 				{
-					for (int i = 0; i < betest; ++i)
+					for (int i = 0; i < numberOfFiles; ++i)
 					{
 						urit(filenames[i]);
-						general_bemenet(filenames[i], n, m, elsz);
+						generate_input(filenames[i], n, m, numberOfEdges);
 					}
 				}
 				break;
 
 				case '5':
 				{
-					for (int i = 0; i < betest; ++i)
+					for (int i = 0; i < numberOfFiles; ++i)
 						urit(filenames[i]);
 				}
 				break;
 
 				case '6':
 				{
-					cout << " - [ Urit Egy Allomany ] \n\n";
-					kiir_filenames(filenames, betest);
-					fnev = new char[256];
-					beker_fnev(filenames, betest, fnev);
-					urit(fnev);
-					delete[] fnev;
+					cout << " - [ Empty every input file ] \n\n";
+					print_filenames(filenames, numberOfFiles);
+					filename = new char[256];
+					read_file(filenames, numberOfFiles, filename);
+					urit(filename);
+					delete[] filename;
 				}
 				break;
 
 				case '7':
 				{
-					cout << " - [ Kiir egy allomanyt ] \n\n";
-					kiir_filenames(filenames, betest);
-					fnev = new char[256];
-					beker_fnev(filenames, betest, fnev);
-					kiir_allomany(fnev);
-					delete[] fnev;
+					cout << " - [ Print an input file content ] \n\n";
+					print_filenames(filenames, numberOfFiles);
+					filename = new char[256];
+					read_file(filenames, numberOfFiles, filename);
+					print_file(filename);
+					delete[] filename;
 				}
 				break;
 
@@ -704,9 +704,9 @@ int main(int argc, char **argv)
 				}
 				if (ok2 != false)
 				{
-					cout << "\n - [ " << betest + 1 << " ] Vissza!\n";
+					cout << "\n - [ " << numberOfFiles + 1 << " ] Back!\n";
 					cout << " -  ";
-					cin >> feladat;
+					cin >> command;
 				}
 			}
 		}
@@ -714,15 +714,15 @@ int main(int argc, char **argv)
 
 		case '4':
 		{
-			kiir_bemenet(el, n, m, elsz);
+			print_input(edge, n, m, numberOfEdges);
 		}
 		break;
 
 		case '5':
 		{
-			cout << "Grafikus abrazolas..(SFML).\n";
+			cout << "Graphic representation....\n";
 
-			abrazol(el, elsz, n, m);
+			graphical_representation(edge, numberOfEdges, n, m);
 		}
 		break;
 
@@ -733,6 +733,6 @@ int main(int argc, char **argv)
 		break;
 		}
 	}
-	delete[] el;
+	delete[] edge;
 	return 0;
 }
